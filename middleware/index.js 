@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 
 export function middleware(request) {
   const password = process.env.SITE_PASSWORD;
-  const { cookies, nextUrl, url } = request;
+  const { cookies, nextUrl } = request;
 
   // Check if the password is correct
   if (cookies.get('site-password') === password) {
@@ -21,7 +21,7 @@ export function middleware(request) {
   return new NextResponse(
     `<html>
       <body>
-        <form method="get" action="${url}">
+        <form method="get" action="${nextUrl.pathname}">
           <label>Password:</label>
           <input type="password" name="password" />
           <button type="submit">Submit</button>

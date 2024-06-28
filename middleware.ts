@@ -1,24 +1,22 @@
-
-import { withLocales } from "nextra/locales";
 import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
+import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs';
 
+export async function middleware(req: NextRequest) {
+  const res = NextResponse.next();
+  const supabase = createMiddlewareClient({ req, res });
+  
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
 
-export const middleware = withLocales((request) => {
-    const basicAuth = request.headers.get("authorization");
-    const url = request.nextUrl;
-    const contentRoute = /\.(jpe?g|svg|png|webmanifest|xml|ico|txt)$/.test(request.nextUrl.pathname);
-    if (contentRoute) return NextResponse.next();
-    if (basicAuth) {
-        const authValue = basicAuth.split(" ")[1];
-        const [user, pwd] = atob(authValue).split(":");
-        if (user === "Lax" && pwd === "norwalk") {
-            return NextResponse.next();
-        } else {
-            request.headers.delete("authorization");
-            url.pathname = "/api/auth";
-            return NextResponse.rewrite(url);
-        }
-    }
-    url.pathname = "/api/auth";
-    return NextResponse.rewrite(url);
-});
+  if (!session && req.nextUrl.pathname !== '/login') {
+    return NextResponse.redirect(new URL('/login', req.url));
+  }
+
+  return res;
+}
+
+export const config = {
+  matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)'],
+};
